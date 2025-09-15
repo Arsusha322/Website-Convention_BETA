@@ -34,3 +34,11 @@ class UserResponse(UserBase):
 
     class Config:
         from_attributes = True
+
+
+class UserLogin(UserBase):
+    password: str = Field(..., example='password322')
+
+class UserLoginResponse(BaseModel):
+    access_token: str
+    token_type: str
