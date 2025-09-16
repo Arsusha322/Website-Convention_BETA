@@ -23,30 +23,29 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=UserLoginResponse)
 def login(user: UserLogin, response: Response, db: Session = Depends(get_db)):
-    try:
-        db_user = db.query(UserData).filter(UserData.email == user.email).first()
-        if not db_user:
-            raise HTTPException(status_code=401, detail="Неверный email или пароль")
+    db_user = db.query(UserData).filter(UserData.email == user.email).first()
+    if not db_user or not verify_password(user.password, db_user.password_hash):
+        raise HTTPException(status_code=401, detail="Неверный email или пароль")
 
-        if not verify_password(user.password, db_user.password_hash):
-            raise HTTPException(status_code=401, detail="Неверный email или пароль")
-
-        access_token = security.create_access_token(uid=str(db_user.id))
-        response.set_cookie(config.JWT_ACCESS_COOKIE_NAME, access_token)
-        return UserLoginResponse(access_token=access_token, token_type="bearer")
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+    access_token = security.create_access_token(uid=str(db_user.id))
+    response.set_cookie(
+        key=config.JWT_ACCESS_COOKIE_NAME,
+        value=access_token,
+        httponly=True
+    )
+    return UserLoginResponse(access_token=access_token, token_type="bearer")
 
 @router.post("/history", response_model=UserHistoryResponse)
-def add_history(data: UserHistoryCreate, db: Session = Depends(get_db), user_id: str = Depends(security.get_current_subject)):
-    new_record = UserHistory(user_id = user_id, file_name = data.file_name, text_result = data.text_result)
+def add_history(data: UserHistoryCreate, db: Session = Depends(get_db), current_user: UserData = Depends(security.get_current_subject)):
+    new_record = UserHistory(user_id=current_user.id, file_name=data.file_name, text_result=data.text_result)
     db.add(new_record)
     db.commit()
     db.refresh(new_record)
     return new_record
 
 @router.get("/history", response_model=list[UserHistoryResponse])
-def get_history(db: Session = Depends(get_db), user_id: str = Depends(security.get_current_subject)):
-    return db.query(UserHistory).filter(UserHistory.user_id == user_id).order_by(UserHistory.created_at.desc()).all()
+def get_history(
+    db: Session = Depends(get_db),
+    current_user: UserData = Depends(security.get_current_subject)
+):
+    return db.query(UserHistory).filter(UserHistory.user_id == current_user.id).order_by(UserHistory.created_at.desc()).all()
