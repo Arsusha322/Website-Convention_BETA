@@ -49,3 +49,4 @@ def get_history(
     current_user: UserData = Depends(security.get_current_subject)
 ):
     return db.query(UserHistory).filter(UserHistory.user_id == current_user.id).order_by(UserHistory.created_at.desc()).all()
+
