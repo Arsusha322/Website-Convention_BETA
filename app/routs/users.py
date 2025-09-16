@@ -23,12 +23,16 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=UserLoginResponse)
 def login(user: UserLogin, db: Session = Depends(get_db)):
-    db_user = db.query(UserData).filter(UserData.email == user.email).first()
-    if not db_user:
-        raise HTTPException(status_code=401, detail="Неверный email или пароль")
+    try:
+        db_user = db.query(UserData).filter(UserData.email == user.email).first()
+        if not db_user:
+            raise HTTPException(status_code=401, detail="Неверный email или пароль")
 
-    if not verify_password(user.password, db_user.password_hash):
-        raise HTTPException(status_code=401, detail="Неверный email или пароль")
+        if not verify_password(user.password, db_user.password_hash):
+            raise HTTPException(status_code=401, detail="Неверный email или пароль")
 
-    access_token = security.create_access_token(subject=str(db_user.id))
-    return UserLoginResponse(access_token=access_token, token_type="bearer")
+        access_token = security.create_access_token(uid=str(db_user.id))
+        return UserLoginResponse(access_token=access_token, token_type="bearer")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
