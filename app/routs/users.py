@@ -36,14 +36,6 @@ def logout(response: Response):
     response.delete_cookie("access_token")
     return {"message": "Вы успешно вышли"}
 
-@router.post("/history", response_model=UserHistoryResponse)
-def add_history(data: UserHistoryCreate, db: Session = Depends(get_db), access_token: str | None = Cookie(default=None)):
-    user_id = get_current_user(access_token)
-    new_record = UserHistory(user_id=user_id, file_name=data.file_name, text_result=data.text_result)
-    db.add(new_record)
-    db.commit()
-    db.refresh(new_record)
-    return new_record
 
 @router.get("/history", response_model=list[UserHistoryResponse])
 def get_history(db: Session = Depends(get_db), access_token: str | None = Cookie(default=None)):
