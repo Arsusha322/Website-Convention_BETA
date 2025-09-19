@@ -4,19 +4,21 @@ from app.database import get_db
 from app.models import UserHistory
 from app.schemas import UserHistoryCreate, UserHistoryResponse
 from app.utils import get_current_user
+import aiofiles
 
 router = APIRouter()
 
 
 @router.post("/uploadfile/", response_model=UserHistoryResponse)
-def upload_file(file: UploadFile, user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+async def upload_file(file: UploadFile, access_token: str | None = Cookie(default=None), db: Session = Depends(get_db)):
+    user_id = Depends(get_current_user(access_token))
     if not file.filename.endswith((".mp3", ".wav")):
         raise HTTPException(status_code=400, detail="Неподдерживаемый формат файла")
 
     file_path = f"uploaded_files/{file.filename}"
-    with open(file_path, "wb") as f:
-        context = file.read()
-        f.write(context)
+    async with aiofiles.open(file_path, "wb") as f:
+        context = await file.read()
+        await f.write(context)
 
     """     ждем антона
 
