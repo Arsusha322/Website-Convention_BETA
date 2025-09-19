@@ -11,7 +11,7 @@ router = APIRouter()
 
 @router.post("/uploadfile/", response_model=UserHistoryResponse)
 async def upload_file(file: UploadFile, access_token: str | None = Cookie(default=None), db: Session = Depends(get_db)):
-    user_id = Depends(get_current_user(access_token))
+    user_id = get_current_user(access_token)
     if not file.filename.endswith((".mp3", ".wav")):
         raise HTTPException(status_code=400, detail="Неподдерживаемый формат файла")
 
