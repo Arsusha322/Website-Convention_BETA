@@ -13,10 +13,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:63342"],  # твой фронт
+    allow_origins=["http://localhost:63342"],
     allow_credentials=True,
-    allow_methods=["*"],  # разрешаем все методы (POST, GET, OPTIONS и т.д.)
-    allow_headers=["*"],  # разрешаем все заголовки
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(users.router, prefix="/users", tags=["users"])
