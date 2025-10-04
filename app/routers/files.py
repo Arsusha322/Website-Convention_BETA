@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends, Cookie, UploadFile, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import UserHistory
-from app.schemas import UserHistoryCreate, UserHistoryResponse
-from app.utils import get_current_user
+from app.schemas import UserHistoryResponse
+from app.utils.password_and_token import get_current_user
 import aiofiles
 
 router = APIRouter()
