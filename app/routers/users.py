@@ -21,9 +21,8 @@ async def create_user(user: UserCreate, response: Response, db: AsyncSession = D
     await db.refresh(new_user)
 
     access_token = create_access_token(user_id=new_user.id)
-    response.set_cookie(key="access_token", value=access_token, httponly=True, samesite="lax")
+    response.set_cookie(key="access_token", value=access_token, httponly=True, secure=True, samesite="lax")
     return new_user
-
 
 @router.post("/login", response_model=UserLoginResponse)
 async def login(user: UserLogin, response: Response, db: AsyncSession = Depends(get_db)):
@@ -33,14 +32,13 @@ async def login(user: UserLogin, response: Response, db: AsyncSession = Depends(
         raise HTTPException(status_code=401, detail="Неверный email или пароль")
 
     access_token = create_access_token(user_id=db_user.id)
-    response.set_cookie(key="access_token", value=access_token, httponly=True, samesite="lax")
+    response.set_cookie(key="access_token", value=access_token, httponly=True, secure=True, samesite="lax")
     return UserLoginResponse(access_token=access_token, token_type="bearer")
 
 @router.post("/logout")
 async def logout(response: Response):
     response.delete_cookie("access_token")
     return {"message": "Вы успешно вышли"}
-
 
 @router.get("/history", response_model=list[UserHistoryResponse])
 async def get_history(db: AsyncSession = Depends(get_db), access_token: str | None = Cookie(default=None)):

@@ -2,6 +2,7 @@ import os
 from passlib.context import CryptContext
 import jwt
 import datetime
+from fastapi import HTTPException, status
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -21,12 +22,12 @@ def create_access_token(user_id: int):
 
 def get_current_user(access_token: str | None):
     if not access_token:
-        raise Exception("Не авторизован")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Не авторизован")
     try:
         payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = int(payload.get("sub"))
         return user_id
     except jwt.ExpiredSignatureError:
-        raise Exception("Токен просрочен")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Токен просрочен")
     except jwt.InvalidTokenError:
-        raise Exception("Неверный токен")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Неверный токен")
